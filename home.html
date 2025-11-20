@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Traductor en Tiempo Real</title>
+  <script defer src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" />
+</head>
+<body class="bg-gray-100 min-h-screen p-6">
+  <div class="max-w-3xl mx-auto bg-white p-6 rounded-2xl shadow-lg">
+    <h1 class="text-2xl font-bold mb-4">Traductor en Tiempo Real (IA)</h1>
+
+    <div class="grid grid-cols-1 gap-4">
+      <div>
+        <label class="block font-semibold mb-1">Texto a traducir</label>
+        <input id="inputText" class="w-full border rounded-lg p-3" placeholder="Escribe algo..." />
+      </div>
+
+      <div>
+        <label class="block font-semibold mb-1">Traducción</label>
+        <div id="translation" class="w-full border rounded-lg p-3 bg-gray-50 min-h-[80px]"></div>
+      </div>
+
+      <div>
+        <h3 class="font-semibold mb-1">Sugerencias</h3>
+        <ul id="suggestions" class="space-y-2"></ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const input = document.getElementById('inputText');
+    const translationBox = document.getElementById('translation');
+    const suggestionsBox = document.getElementById('suggestions');
+
+    let timer;
+
+    input.addEventListener('input', () => {
+      const text = input.value.trim();
+
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        if (!text) {
+          translationBox.innerHTML = "";
+          suggestionsBox.innerHTML = "";
+          return;
+        }
+
+        axios.post('/api/translate', {
+          text,
+          sourceLang: 'es',
+          targetLang: 'en'
+        }).then(res => {
+          translationBox.textContent = res.data.translation;
+        });
+
+        axios.post('/api/suggest', {
+          text,
+          sourceLang: 'es',
+          targetLang: 'en'
+        }).then(res => {
+          const s = res.data.suggestions || [];
+          suggestionsBox.innerHTML = s.map(item => `
+            <li class="border p-2 rounded-lg bg-gray-50">
+              <strong>${item.label}</strong>
+              <div class="text-sm text-gray-600">${item.translated}</div>
+            </li>
+          `).join('');
+        });
+
+      }, 300);
+    });
+  </script>
+</body>
+</html>
